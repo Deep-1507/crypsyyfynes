@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { GoogleLogin } from "@react-oauth/google";
 import { useRouter } from "next/navigation";
 import {
   TOKEN_KEY,
@@ -52,6 +53,8 @@ const signupSteps = [
     description: "Review your details before creating your account.",
   },
 ];
+
+
 
 export default function UserAuth() {
   const router = useRouter();
@@ -119,6 +122,54 @@ export default function UserAuth() {
         }
       );
     });
+  }
+
+  async function handleGoogleSuccess(credentialResponse) {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch("/api/users/auth/google-signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          credential: credentialResponse.credential,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.token) {
+        throw new Error(
+          result.message || "Google authentication failed"
+        );
+      }
+
+      const user = result.data;
+      const userId = user?._id;
+
+      if (!userId) {
+        throw new Error("User ID was not returned.");
+      }
+
+      localStorage.setItem(TOKEN_KEY, result.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      localStorage.setItem(USER_ID, String(userId));
+
+      router.push("/user/dashboard");
+    } catch (err) {
+      console.error("Google authentication error:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Google sign-in failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function submit(event) {
@@ -379,8 +430,8 @@ export default function UserAuth() {
             <div className="relative mb-7 grid grid-cols-2 rounded-xl bg-slate-100 p-1">
               <span
                 className={`absolute bottom-1 top-1 w-[calc(50%-4px)] rounded-lg bg-white shadow-sm transition-transform duration-300 ${mode === "signup"
-                    ? "translate-x-full"
-                    : "translate-x-0"
+                  ? "translate-x-full"
+                  : "translate-x-0"
                   }`}
               />
 
@@ -388,8 +439,8 @@ export default function UserAuth() {
                 type="button"
                 onClick={() => changeMode("signin")}
                 className={`relative z-10 rounded-lg px-4 py-3 text-sm font-bold transition ${mode === "signin"
-                    ? "text-blue-700"
-                    : "text-slate-500 hover:text-slate-800"
+                  ? "text-blue-700"
+                  : "text-slate-500 hover:text-slate-800"
                   }`}
               >
                 Sign in
@@ -399,8 +450,8 @@ export default function UserAuth() {
                 type="button"
                 onClick={() => changeMode("signup")}
                 className={`relative z-10 rounded-lg px-4 py-3 text-sm font-bold transition ${mode === "signup"
-                    ? "text-blue-700"
-                    : "text-slate-500 hover:text-slate-800"
+                  ? "text-blue-700"
+                  : "text-slate-500 hover:text-slate-800"
                   }`}
               >
                 Sign up
@@ -470,6 +521,31 @@ export default function UserAuth() {
                   <span aria-hidden="true">→</span>
                 </button>
 
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200" />
+                  </div>
+
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-white px-3 text-slate-400">
+                      OR CONTINUE WITH
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError("Google sign-in was unsuccessful.")}
+                    text="continue_with"
+                    shape="rectangular"
+                    theme="outline"
+                    size="large"
+                    width="350"
+                    disabled={loading}
+                  />
+                </div>
+
                 <p className="pt-2 text-center text-sm text-slate-500">
                   New to ShopSync?{" "}
                   <button
@@ -508,10 +584,10 @@ export default function UserAuth() {
                         <span
                           key={step.number}
                           className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${signupStep === step.number
-                              ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                              : signupStep > step.number
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-slate-100 text-slate-400"
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                            : signupStep > step.number
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-slate-100 text-slate-400"
                             }`}
                         >
                           {signupStep > step.number
@@ -539,8 +615,8 @@ export default function UserAuth() {
                   {/* Animated step content */}
                   <div
                     className={`transition-all duration-300 ease-out ${stepVisible
-                        ? "translate-x-0 opacity-100"
-                        : "translate-x-4 opacity-0"
+                      ? "translate-x-0 opacity-100"
+                      : "translate-x-4 opacity-0"
                       }`}
                   >
                     {/* STEP 1: Account details */}

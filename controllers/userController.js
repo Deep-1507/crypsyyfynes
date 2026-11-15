@@ -72,7 +72,10 @@ function handleError(error, operation) {
 
 function publicUser(user) {
   const data = user.toObject();
+
   delete data.password;
+  delete data.googleId;
+  
   return data;
 }
 

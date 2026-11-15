@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, "Email is required"],
-      unique:true,
+      unique: true,
       trim: true,
       lowercase: true,
       maxlength: 120,
@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
-     location: {
+    location: {
       addressLine: {
         type: String,
         required: [true, "Address line is required"],
@@ -73,7 +73,14 @@ const userSchema = new mongoose.Schema(
       min: -180,
       max: 180,
     },
+
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
   },
+
   {
     timestamps: true,
   }
